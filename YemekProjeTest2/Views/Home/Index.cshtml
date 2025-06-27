@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "Ana sayfa";
+}
+
+<div class="container mt-5">
+    <div class="text-center">
+        <h1 class="display-5">Yemekvakti'ne Hoşgeldiniz!</h1>
+        <p class="lead">Lezzetli yemekler bir tık ötede.</p>
+    </div>
+    <hr class="my-4">
+    <div class="d-flex justify-content-center mb-5">
+        <form method="get" action="@Url.Action("Index", "Restaurants")" class="form-inline w-50">
+            <div class="input-group w-100">
+                <input class="form-control" type="search" name="searchString" placeholder="İstediğiniz restoran adını girin..." aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit"><i class="bi bi-search"></i></button>
+            </div>
+        </form>
+    </div>
+
+
+    <h2 class="mb-4">En Yüksek Puanlı Restoranlar</h2>
+
+    <div class="row">
+        @if (Model != null && Model.Count > 0)
+        {
+            @foreach (var restaurant in Model)
+            {
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h4 class="card-title"><a href="@Url.Action("Details", "Restaurants", new { id = restaurant.RestaurantId })">@restaurant.Name</a></h4>
+                            <p class="card-text">Puan: @(restaurant.Rating?.ToString("0.00") ?? "Henüz değerlendirilmemiş") / 5</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p>Değerlendirilmiş restoran yok.</p>
+        }
+    </div>
+
+    <!-- Restoran sahibi kaydolma bağlantısı -->
+    <p class="mt-4">Restoran sahibi misiniz? <a href="@Url.Action("RegisterOwner", "Account")">Buraya tıklayarak</a> sistemimize kaydolabilirsiniz.</p>
+</div>

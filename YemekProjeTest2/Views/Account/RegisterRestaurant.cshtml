@@ -1,0 +1,29 @@
+﻿@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Restoran Kaydı";
+}
+
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">
+        @ViewBag.ErrorMessage
+    </div>
+}
+
+<h2>Restoran Kaydı</h2>
+
+<form asp-controller="Account" asp-action="RegisterRestaurant" method="post" class="form-group">
+    <div class="mb-3">
+        <label for="Name" class="form-label">Restoran Adı</label>
+        <input type="text" class="form-control" id="Name" name="name" required>
+    </div>
+    <div class="mb-3">
+        <label for="Address" class="form-label">Adres</label>
+        <input type="text" class="form-control" id="Address" name="address" required>
+    </div>
+    <div class="mb-3">
+        <label for="PhoneNumber" class="form-label">Telefon Numarası</label>
+        <input type="text" class="form-control" id="PhoneNumber" name="phoneNumber" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Kaydet</button>
+</form>

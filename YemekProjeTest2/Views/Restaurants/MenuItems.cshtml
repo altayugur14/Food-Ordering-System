@@ -1,0 +1,182 @@
+﻿@model List<YemekProjeTest2.Models.MenuItem>
+
+<!-- Create Modal -->
+<div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form method="post" action="@Url.Action("CreateMenuItem", "Restaurants")">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createModalLabel">Yeni Menü Öğesi Oluştur</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Kapat">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="RestaurantId" value="@ViewBag.RestaurantId">
+                    <div class="form-group">
+                        <label for="name">Ad:</label>
+                        <input type="text" class="form-control" id="name" name="Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Açıklama:</label>
+                        <input type="text" class="form-control" id="description" name="Description">
+                    </div>
+                    <div class="form-group">
+                        <label for="price">Fiyat:</label>
+                        <input type="number" class="form-control" id="price" name="Price" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="submit" class="btn btn-primary">Oluştur</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form method="post" action="@Url.Action("UpdateMenuItem", "Restaurants")">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Menü Öğesini Düzenle</h5>
+                    <button type="button" class="close" aria-label="Kapat" onclick="closeModal()">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editRestaurantId" name="RestaurantId" value="@ViewBag.RestaurantId">
+                    <input type="hidden" id="editMenuItemId" name="MenuItemId">
+                    <div class="form-group">
+                        <label for="editName">Ad:</label>
+                        <input type="text" class="form-control" id="editName" name="Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDescription">Açıklama:</label>
+                        <input type="text" class="form-control" id="editDescription" name="Description">
+                    </div>
+                    <div class="form-group">
+                        <label for="editPrice">Fiyat:</label>
+                        <input type="number" class="form-control" id="editPrice" name="Price" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Kapat</button>
+                    <button type="submit" class="btn btn-primary">Güncelle</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Menü Öğesini Sil</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Kapat">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">Sil</button>
+                <form id="deleteForm" method="post" action="" style="display: none;">
+                    <input type="hidden" id="deleteMenuItemId" name="MenuItemId">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="container mt-5">
+
+    <div class="card">
+        <div class="card-header">
+            <h2>Restoranınızdaki Menüler ve İçerikleri</h2>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">İsim</th>
+                        <th scope="col">Açıklama</th>
+                        <th scope="col">Fiyat</th>
+                        <th scope="col">Eylemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>@item.Description</td>
+                            <td>@item.Price</td>
+                            <td>
+                                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editModal" onclick="loadEditModal(@item.MenuItemId, '@item.Name', '@item.Description', @item.Price)">Düzenle</button>
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="setDeleteId(@item.MenuItemId)">Sil</button>
+                            </td>
+
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createModal">Yeni Menü Öğesi Ekle</button>
+
+<script>
+    function loadEditModal(menuItemId, name, description, price) {
+
+        // Menü öğesinin detaylarını modal içine yerleştirme
+        document.getElementById('editMenuItemId').value = menuItemId;
+        document.getElementById('editName').value = name;
+        document.getElementById('editDescription').value = description;
+        document.getElementById('editPrice').value = price;
+
+        // Modal'ı gösterme
+        var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        editModal.show();
+
+    }
+
+    function closeModal() {
+        var editModalEl = document.getElementById('editModal');
+        var editModal = bootstrap.Modal.getInstance(editModalEl);
+        editModal.hide();
+
+        // Arka plandaki grilik problemi için geçici çözüm
+        var backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.classList.remove('show');
+            setTimeout(function () { backdrop.remove(); }, 150); // 150ms, animasyon süresine uygun bir değer
+        }
+    }
+
+    function setDeleteId(menuItemId) {
+        // Silinecek menü öğesinin ID'sini form içinde ayarla
+        document.getElementById('deleteMenuItemId').value = menuItemId;
+
+        // Silme işlemi için URL'yi ayarla
+        var actionUrl = '@Url.Action("DeleteMenuItem", "Restaurants")'; // Yönlendirme işleminizle değiştirin
+        document.getElementById('deleteForm').action = actionUrl;
+    }
+
+    function confirmDelete() {
+        // Silme formunu gönder
+        document.getElementById('deleteForm').submit();
+    }
+
+
+</script>

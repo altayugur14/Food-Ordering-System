@@ -1,0 +1,171 @@
+﻿@model List<YemekProjeTest2.Models.CartItem>
+@{
+    var userId = Context.Session.GetInt32("UserId");
+    var deliveryAddress = Context.Session.GetString("Address");
+    var totalPrice = @ViewData["TotalPrice"];
+}
+
+<!-- Modal -->
+<div class="modal fade" id="emptyCartModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Sepeti Boşalt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Sepeti boşaltmak istediğinize emin misiniz? Bu işlem geri alınamaz.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hayır</button>
+                <button type="button" class="btn btn-danger" onclick="performDelete()">Evet, Boşalt</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Menü</th>
+            <th>Miktar</th>
+            <th>Menü Fiyatı</th>
+            <th>Total Fiyat</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            int counter = 0;
+            double totalCost = 0.0;
+        }
+        @foreach (var item in Model)
+        {
+            double itemTotal = item.Quantity * item.MenuItem.Price;
+            totalCost += itemTotal;
+            <tr>
+                <td>@item.MenuItem.Name</td>
+                <td id="quantity-@counter">@item.Quantity</td>
+                <td>@item.MenuItem.Price</td>
+                <td id="total-@counter">@itemTotal</td> 
+                <td>
+                    <a href="javascript:void(0);" onclick="decreaseQuantity(@item.CartItemId, 'quantity-@counter', 'quantity-display-@counter', 'total-@counter', @item.MenuItem.Price)" class="btn btn-secondary">-</a>
+                    <span id="quantity-display-@counter">@item.Quantity</span>
+                    <a href="javascript:void(0);" onclick="increaseQuantity(@item.CartItemId, 'quantity-@counter', 'quantity-display-@counter', 'total-@counter', @item.MenuItem.Price)" class="btn btn-secondary">+</a>
+
+                </td>
+            </tr>
+            counter++;
+        }
+        
+
+        <h4>Sepetinizdekiler</h4>
+
+
+
+    </tbody>
+</table>
+<h4>Sepet toplam tutarı: <span id="total-cost">@totalCost.ToString("F2")</span> TL</h4>
+<!--Sepeti Boşalt Butonu -->
+<button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#emptyCartModal">Sepeti Boşalt</button>
+<form method="post" asp-action="EmptyCart" asp-controller="Cart">
+    <input type="hidden" name="userId" value="@userId" />
+    <!--<button type="submit">Sepeti Boşalt</button>-->
+</form>
+
+<button class="btn btn-primary confirm-cart" id="confirmCartButton">Sepeti Onayla</button>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+
+    function increaseQuantity(cartItemId, quantityElementId, quantityDisplayElementId, totalElementId, menuItemPrice) {
+        $.ajax({
+            url: '@Url.Action("IncreaseQuantity", "Cart")',
+            type: 'GET',
+            data: { cartItemId: cartItemId },
+            success: function () {
+                var quantityElement = $("#" + quantityElementId);
+                var quantityDisplayElement = $("#" + quantityDisplayElementId);
+                var totalElement = $("#" + totalElementId);
+                var newQuantity = parseInt(quantityElement.text()) + 1;
+                quantityElement.text(newQuantity); // Sayının HTML içeriğinde güncellenmesi
+                quantityDisplayElement.text(newQuantity); // Sayının butonlar arasında güncellenmesi
+                totalElement.text(newQuantity * menuItemPrice);
+                updateTotalCost(menuItemPrice);
+            }
+        });
+    }
+
+    function decreaseQuantity(cartItemId, quantityElementId, quantityDisplayElementId, totalElementId, menuItemPrice) {
+        var quantityElement = document.getElementById(quantityElementId);
+        var quantity = parseInt(quantityElement.innerText);
+        if (quantity == 1) {
+            var row = document.getElementById(quantityElementId).closest("tr");
+            row.parentNode.removeChild(row);
+        }
+        $.ajax({
+            url: '@Url.Action("DecreaseQuantity", "Cart")',
+            type: 'GET',
+            data: { cartItemId: cartItemId },
+            success: function () {
+                var quantityElement = $("#" + quantityElementId);
+                var quantityDisplayElement = $("#" + quantityDisplayElementId);
+                var totalElement = $("#" + totalElementId);
+                var newQuantity = parseInt(quantityElement.text()) - 1;
+                if (newQuantity == 0) {
+                    totalElement.parent().parent().remove(); // Remove the entire row if quantity is 0
+                } else {
+                    quantityElement.text(newQuantity); // Sayının HTML içeriğinde güncellenmesi
+                    quantityDisplayElement.text(newQuantity); // Sayının butonlar arasında güncellenmesi
+                    totalElement.text(newQuantity * menuItemPrice);
+                }
+                updateTotalCost(-menuItemPrice);
+            }
+        });
+    }
+
+    function updateTotalCost(amount) {
+        var totalCostElement = document.getElementById("total-cost");
+        var totalCost = parseFloat(totalCostElement.innerText);
+        totalCost += amount;
+        totalCostElement.innerText = totalCost.toFixed(2);
+    }
+
+    function performDelete() {
+        var myModal = new bootstrap.Modal(document.getElementById('emptyCartModal'), {})
+        myModal.hide();
+        $.ajax({
+            url: '@Url.Action("EmptyCart", "Cart")',
+            type: 'POST',
+            data: { userId: @Context.Session.GetInt32("UserId") }, // MANUEL Change this to dynamic user id later 
+            success: function (result) {
+                // Refresh the page after successful deletion
+                location.reload();
+            }
+        });
+    }
+
+    function confirmCart() {
+        // AJAX çağrısıyla "ConfirmCart" metotunu tetikle
+        $.ajax({
+            url: '@Url.Action("ConfirmCart", "Cart")',
+            type: 'POST',
+            success: function (result) {
+                // İsteğin başarılı olması durumunda, kullanıcıyı onay sayfasına yönlendir
+                window.location.href = '@Url.Action("Confirmation", "Cart")';
+            },
+            error: function (error) {
+                // Hata durumunda, kullanıcıya bir hata mesajı göster
+                alert("Sipariş onaylanamadı. Lütfen tekrar deneyin.");
+            }
+        });
+    }
+
+    // Butona tıklanınca "confirmCart" işlevini çağır
+    $("#confirmCartButton").click(confirmCart);
+
+
+</script>
+
+

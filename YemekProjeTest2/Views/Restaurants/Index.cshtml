@@ -1,0 +1,26 @@
+﻿@model IEnumerable<YemekProjeTest2.Models.Restaurant>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-warning">
+        Arama sonucunda hiç restoran bulunamadı.
+    </div>
+}
+else
+{
+    foreach (var restaurant in Model)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">@restaurant.Name</h5>
+                <p class="card-text">@restaurant.Address</p>
+                <a href="@Url.Action("Details", "Restaurants", new { id = restaurant.RestaurantId })" class="btn btn-primary">Detaylar</a>
+            </div>
+        </div>
+    }
+}
+
+<form method="get">
+    <input class="form-control mr-sm-2" type="search" name="searchString" placeholder="İstediğiniz restoran adını girin..." aria-label="Search">
+    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Ara</button>
+</form>

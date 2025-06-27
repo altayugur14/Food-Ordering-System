@@ -1,0 +1,73 @@
+﻿@{
+    Layout = "_Layout";
+    var userId = Context.Session.GetInt32("UserId");
+}
+<div class="container mt-4">
+    <!-- Hata mesajı -->
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- Giriş yapma uyarısı -->
+    @if (userId == null)
+    {
+        <div class="alert alert-warning">
+            Sipariş verebilmek ve ürünleri sepete ekleyebilmek için <a href="@Url.Action("Login", "Account")" class="alert-link">giriş yapmalısınız!</a>
+        </div>
+    }
+
+    <h2>@Model.Name</h2>
+    <p>@Model.Address</p>
+    <p>@Model.PhoneNumber</p>
+    <!--<p>Puan: @Model.Rating / 5</p>-->
+    @if (ViewBag.RatingCount > 0)
+    {
+        <p>Puan: @Model.Rating?.ToString("0.00") / 5 (@ViewBag.RatingCount değerlendirme)</p>
+    }
+    else
+    {
+        <p>Restoranda değerlendirme daha yapılmadı.</p>
+    }
+    <a href="@Url.Action("Reviews", "Restaurants", new { id = Model.RestaurantId })" class="btn btn-secondary mb-3">Restoran yorumlarına göz at</a>
+
+    <h3>Menü</h3>
+    @foreach (var menuItem in Model.MenuItems)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">@menuItem.Name - @menuItem.Price TL</h5>
+                <p class="card-text">@menuItem.Description</p>
+                <form method="post" asp-action="AddToCart" asp-controller="Cart">
+                    <input type="hidden" name="menuItemId" value="@menuItem.MenuItemId" />
+                    @if (userId != null)
+                    {
+                        <div class="d-flex">
+                            <input type="number" name="quantity" value="1" min="1" max="50" class="form-control w-25" />
+                            <button type="submit" onclick="showAddedToCartMessage()" class="btn btn-primary ml-2">Sepete Ekle</button>
+                        </div>
+                        <span id="addedToCartMessage" style="display:none;" class="text-success">Sepete Eklendi!</span>
+                    }
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+
+<script>
+    function showAddedToCartMessage() {
+        document.getElementById("addedToCartMessage").style.display = "block";
+        setTimeout(function () {
+            document.getElementById("addedToCartMessage").style.display = "none";
+        }, 3000);  // 3 saniye boyunca göster mesajı. BG
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {//çarpı butonu çalışması için
+        window.closeLoginWarning = function () {
+            document.getElementById('loginWarning').style.display = 'none';
+        };
+    });
+</script>

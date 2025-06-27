@@ -1,0 +1,452 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .pagination {
+        margin-top: 20px;
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-2">
+        <!-- Sidebar -->
+        <div class="list-group">
+            <a href="#" class="list-group-item list-group-item-action" data-table="Users">Kullanıcılar</a>
+            <a href="#" class="list-group-item list-group-item-action" data-table="Restaurants">Restoranlar</a>
+            <a href="#" class="list-group-item list-group-item-action" data-table="MenuItems">Menü İçerikleri</a>
+            <a href="#" class="list-group-item list-group-item-action" data-table="Orders">Siparişler</a>
+            <a href="#" class="list-group-item list-group-item-action" data-table="OrderDetails">Sipariş Detayları</a>
+            <a href="#" class="list-group-item list-group-item-action" data-table="Reviews">Değerlendirmeler</a>
+            <a href="#" class="list-group-item list-group-item-action" data-table="Cuisines">Mutfaklar</a>
+            <a href="#" class="list-group-item list-group-item-action" data-table="PaymentMethods">Ödeme Metotları</a>
+            <a href="#" class="list-group-item list-group-item-action" data-table="Promotions">Promosyonlar</a>
+        </div>
+    </div>
+    <div class="col-md-9">
+
+        <!-- Tablo başı -->
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <!-- tablo satır içerikleri -->
+            </table>
+        </div>
+    </div>
+</div>
+<div class="mb-3">
+    <button class="btn btn-success" id="addNewRow">Ekle</button>
+</div>
+<div class="pagination">
+    <button class="btn btn-primary" id="prevPage">&lt;</button>
+    <span id="currentPageLabel">1</span>
+    <button class="btn btn-primary" id="nextPage">&gt;</button>
+</div>
+
+<!-- Ekle Modal -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">Yeni Satır Ekle</h5>
+                <button type="button" class="close" id="closeModalLabel" data-dismiss="modal" aria-label="Kapat">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Form başlangıcı -->
+                <form id="addForm">
+                    <!-- Form elemanları buraya gelecek -->
+                </form>
+                <!-- Form sonu -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="closeModalLabel" data-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-primary" id="saveNewRow">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Kaydı Düzenle</h5>
+                <button type="button" class="close" id="closeEditModal" data-dismiss="modal" aria-label="Kapat">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <!-- The fields here will be dynamically populated based on the selected table, similar to the addModal -->
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="closeEditModal"data-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-primary" id="saveEditButton">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    var currentlyEditingId;
+    var currentPage = 1; // Varsayılan olarak ilk sayfa
+    var pageSize = 10; // Bir sayfada gösterilecek öğe sayısı
+    var currentTable = "Users"; // Başlangıçta varsayılan olarak Kullanıcılar tablosu
+
+    // Sayfa yüklendiğinde varsayılan olarak Kullanıcıları yükle
+    loadTable(currentTable, currentPage);
+
+    // Sidebardaki öğelere tıklanınca ilgili fonksiyonu çağır
+    $(".list-group-item").click(function (e) {
+        e.preventDefault();
+        var table = $(this).attr("data-table");
+        currentTable = table;
+        currentPage = 1;
+        $("#currentPageLabel").text(currentPage);
+        loadTable(table, currentPage);
+    });
+
+    $("#prevPage").click(function (e) {
+        e.preventDefault();
+        if (currentPage > 1) {
+            currentPage--;
+            loadTable(currentTable, currentPage);
+            $("#currentPageLabel").text(currentPage);
+        }
+    });
+
+    $("#nextPage").click(function (e) {
+        e.preventDefault();
+        currentPage++;
+        loadTable(currentTable, currentPage);
+        $("#currentPageLabel").text(currentPage);
+    });
+
+    $("#addNewRow").click(function () {
+        populateAddForm(currentTable);
+        $("#addModal").modal("show");
+    });
+
+    $("#closeModalLabel").click(function () {
+        $("#addModal").modal("hide");
+    });
+    
+
+    $("#saveNewRow").click(function () {
+
+        var formData = {};
+        $("#addForm input").each(function () {
+            formData[$(this).attr("id")] = $(this).val();
+        });
+        var url = "/Admin/Add" + currentTable.charAt(0).toUpperCase() + currentTable.slice(1); // Örneğin: "/Admin/AddUser"
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            success: function (response) {
+                if (response.success) {
+                    alert(response.message);
+                    $("#addModal").modal("hide");
+                    loadTable(currentTable, currentPage);
+                } else {
+                    alert("Bir hata oluştu!");
+                }
+            },
+            error: function (error) {
+                alert("İstek sırasında bir hata oluştu!");
+            }
+        });
+    });
+
+
+    function populateAddForm(table) {
+        var formContent = '';
+
+        var skipColumns = getSkipColumnsForTable(table); // Bu fonksiyon aşağıda
+        var headers = getTableHeaders(table);
+
+        for (var i = 0; i < headers.length; i++) {
+            if (skipColumns.includes(headers[i])) continue; // Eğer sütun atlanacaklar listesindeyse(ID ler manuel girilmeyecek), bu sütunu atla
+
+            formContent += '<div class="form-group">';
+            formContent += '<label for="' + table + headers[i] + '">' + headers[i] + '</label>';
+            formContent += '<input type="text" class="form-control" id="' + headers[i] + '" placeholder="' + headers[i] + '">';
+            formContent += '</div>';
+        }
+
+        $("#addForm").html(formContent);
+    }
+
+    function getTableHeaders(table) {
+        var headers = {
+            Users: ["UserId", "Username", "PasswordHash", "Email", "Role", "Address", "PhoneNumber"],
+            Restaurants: ["RestaurantId", "UserId", "Name", "Address", "PhoneNumber", "Rating"],
+            MenuItems: ["MenuItemId", "RestaurantId", "Name", "Description", "Price"],
+            Orders: ["OrderId", "UserId", "OrderDate", "TotalPrice", "DeliveryAddress", "Status"],
+            OrderDetails: ["OrderDetailsId", "OrderId", "MenuItemId", "Quantity"],
+            Reviews: ["ReviewId", "UserId", "RestaurantId", "Rating", "Comment"],
+            Cuisines: ["CuisineId", "Name"],
+            PaymentMethods: ["PaymentMethodId", "UserId", "CardName", "CardNumber", "ExpiryDate"],
+            Promotions: ["PromotionId", "RestaurantId", "PromoCode", "DiscountPercentage"],
+        };
+
+        return headers[table] || [];
+    }
+
+    function getSkipColumnsForTable(table) {
+        // Bu yapı, hangi tablo için hangi sütunların atlanacağını belirtir
+        var skipColumns = {
+            'Users': ['UserId'],
+            'Restaurants': ['RestaurantId'],
+            'Orders': ['OrderId'],
+            'MenuItems': ['MenuItemId'],
+            'Cuisines': ['CuisineId'],
+            'Reviews': ['ReviewId'],
+            'OrderDetails': ['OrderDetailsId'],
+            'Promotions': ['PromotionId'],
+            'PaymentMethods': ['PaymentMethodId']
+        };
+
+        return skipColumns[table] || [];
+    }
+
+
+    //ilk yarı
+    function loadTable(table, page) {
+        var url = "/Admin/Get" + table.charAt(0).toUpperCase() + table.slice(1);
+        var tableHeaders = getTableHeaders(table); // Sütun başlıklarını al
+
+        $.ajax({
+            url: url,
+            type: "GET",
+            data: { page: page, pageSize: pageSize },
+            success: function (data) {
+                var tableContent = "<thead><tr>";
+
+                // Sütun başlıklarını ekle
+                for (var i = 0; i < tableHeaders.length; i++) {
+                    tableContent += "<th>" + tableHeaders[i] + "</th>";
+                }
+                tableContent += "</tr></thead><tbody>";
+
+                // Verileri ekle
+                $.each(data, function (key, item) {
+                    var lastKey = Object.keys(item).pop();
+                    tableContent += "<tr>";
+                    for (var prop in item) {
+                        var cellValue = (item[prop] !== null) ? item[prop] : ""; // Burada kontrolü yapıyoruz
+                        tableContent += "<td>" + cellValue + "</td>";
+                    }
+
+                    var primaryKeyValue = getPrimaryKeyValueForRow(currentTable, item);
+                    var editButton = '<td><button class="btn btn-warning btn-edit" data-id="' + primaryKeyValue + '">Düzenle</button></td>'; // Edit
+                    var deleteButton = '<td><button class="btn btn-danger btn-delete" data-id="' + primaryKeyValue + '">Sil</button></td>';  // Delete
+
+                    tableContent += editButton + deleteButton;
+                    tableContent += "</tr>";
+                });
+
+                tableContent += "</tbody>";
+                $("table").html(tableContent);
+            }
+        });
+    }
+    //UPDATE BAŞI
+
+    function getPrimaryKeyValueForRow(table, row) {
+        var primaryKey;
+        switch (table) {
+            case "Users": primaryKey = row.userId; break;
+            case "Restaurants": primaryKey = row.restaurantId; break;
+            case "Orders": primaryKey = row.orderId; break;
+            case "MenuItems": primaryKey = row.menuItemId; break;
+            case "OrderDetails": primaryKey = row.orderDetailsId; break;
+            case "Reviews": primaryKey = row.reviewId; break;
+            case "Cuisines": primaryKey = row.cuisineId; break;
+            case "Promotions": primaryKey = row.promotionId; break;
+            case "PaymentMethods": primaryKey = row.paymentMethodId; break;
+            default: primaryKey = null; break;
+        }
+
+        return primaryKey;
+    }
+
+    function populateEditModal(table, data) {
+        var formContent = '';
+        var headers = getTableHeaders(table);
+        headers.forEach(header => {
+            // Exclude the primary key column from the edit form
+            if (getSkipColumnsForTable(table).includes(header)) return;
+            formContent += `<div class="form-group">
+                                <label for="${header}Field">${header}</label>
+                                    <input type="text" class="form-control" id="${header}Field" value="${data[toCamelCase(header)] || ''}">
+                            </div>`;
+        });
+        $("#editForm").html(formContent);
+    }
+
+    $(document).on('click', '.btn-edit', function () {
+        var id = $(this).data('id');
+        currentlyEditingId = $(this).data('id');
+
+        var endpoint = `/Admin/Get${currentTable}?page=1&pageSize=1000`; // Fetch all records for the current table
+        $.ajax({
+            url: endpoint,
+            method: 'GET',
+            success: function (data) {
+                console.log('Returned Data:', data);
+
+                console.log("ID being searched:", id, typeof id);
+                console.log("Matching against key:", `${currentTable.toLowerCase()}Id`);
+                data.forEach(item => {
+                    console.log("Record ID:", item[`${currentTable.toLowerCase()}Id`], typeof item[`${currentTable.toLowerCase()}Id`]);
+                });
+
+                var key = currentTable.charAt(0).toLowerCase() + currentTable.slice(1, -1) + 'Id';
+
+                var record = data.find(item => item[key] === Number(id));
+
+
+                if (record) {
+                    console.log("Record to edit:", record);
+                    populateEditModal(currentTable, record);
+                    $('#editModal').modal('show');
+                } else {
+                    console.log("No matching record found.");
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error('AJAX Error:', textStatus, errorThrown);
+            }
+
+        });
+    });
+
+    function toCamelCase(str) {
+        return str.charAt(0).toLowerCase() + str.slice(1);
+    }
+
+    function gatherEditModalData(table) {
+        var data = {};
+        var headers = getTableHeaders(table);
+        headers.forEach(header => {
+            if (!getSkipColumnsForTable(table).includes(header)) { // Excluding primary key fields
+                data[toCamelCase(header)] = $(`#${header}Field`).val();
+            }
+        });
+        return data;
+    }
+
+    var tableUrlsUpdate = {
+        users: '@Url.Action("UpdateUsers")',
+        orders: '@Url.Action("UpdateOrders")',
+        restaurants: '@Url.Action("UpdateRestaurants")',
+        menuitems: '@Url.Action("UpdateMenuItems")',
+        cuisines: '@Url.Action("UpdateCuisines")',
+        restaurantcuisines: '@Url.Action("UpdateRestaurantCuisines")',
+        reviews: '@Url.Action("UpdateReviews")',
+        orderdetails: '@Url.Action("UpdateOrderDetails")',
+        promotions: '@Url.Action("UpdatePromotions")',
+        paymentmethods: '@Url.Action("UpdatePaymentMethods")'
+    };
+    //ikinci
+    $('#saveEditButton').click(function () {
+        
+        var editedData = gatherEditModalData(currentTable);
+
+        console.log("Edited Data:", editedData);
+        var primaryKey = getPrimaryKeyForTable(currentTable); 
+        editedData[primaryKey] = currentlyEditingId; // This is the ID of the record we are editing, set when the Edit button is clicked
+        // Send the data to the server to update the record
+        var updateUrl = tableUrlsUpdate[currentTable.toLowerCase()];
+        console.log(updateUrl);
+        $.ajax({
+            url: updateUrl,///Admin/Update${currentTable}
+            method: 'POST',
+            data: JSON.stringify(editedData),
+            contentType: "application/json",
+            success: function (response) {
+                if (response.success) {
+                    alert(response.message); // notification
+                    $("#editModal").modal("hide");
+                    loadTable(currentTable, currentPage, pageSize); // Refresh the table
+
+                } else {
+                    alert("Error: " + response.message);
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log("Error Status:", textStatus);
+                console.log("Error Details:", errorThrown);
+                console.log("Error Response:", jqXHR.responseText);
+                alert("Bir hata oluştu. Detaylı bilgi için konsola bakınız.");
+            }
+        });
+    });
+
+    $('.btn-secondary, .close').click(function () {
+        $('#editModal').modal('hide');
+        $('#addModal').modal('hide');
+    });
+
+    function getPrimaryKeyForTable(table) {
+        var primaryKey;
+        switch (table) {
+            case "Users": primaryKey = "userId"; break;
+            case "Restaurants": primaryKey = "restaurantId"; break;
+            case "Orders": primaryKey = "orderId"; break;
+            case "MenuItems": primaryKey = "menuItemId"; break;
+            case "OrderDetails": primaryKey = "orderDetailsId"; break;
+            case "Reviews": primaryKey = "reviewId"; break;
+            case "Cuisines": primaryKey = "cuisineId"; break;
+            case "Promotions": primaryKey = "promotionId"; break;
+            case "PaymentMethods": primaryKey = "paymentMethodId"; break;
+            default: primaryKey = null; break;
+        }
+
+        return primaryKey;
+    }
+    //UPDATE SONU
+    //DELETE BAŞI
+    var tableUrlsDelete = {
+        users: '@Url.Action("DeleteUsers")',
+        orders: '@Url.Action("DeleteOrders")',
+        restaurants: '@Url.Action("DeleteRestaurants")',
+        menuitems: '@Url.Action("DeleteMenuItems")',
+        cuisines: '@Url.Action("DeleteCuisines")',
+        restaurantcuisines: '@Url.Action("DeleteRestaurantCuisines")',
+        reviews: '@Url.Action("DeleteReviews")',
+        orderdetails: '@Url.Action("DeleteOrderDetails")',
+        promotions: '@Url.Action("DeletePromotions")',
+        paymentmethods: '@Url.Action("DeletePaymentMethods")'
+        // ... add similar entries for other tables as needed
+    };
+
+    $(document).on('click', '.btn-delete', function () {
+        var id = $(this).data('id');
+        var confirmation = confirm("Bu kaydı silmek istediğinizden emin misiniz?");
+        var deleteUrl = tableUrlsDelete[currentTable.toLowerCase()];
+        if (confirmation) {
+            $.ajax({
+                url: deleteUrl,
+                method: 'POST',
+                data: JSON.stringify(id),
+                contentType: "application/json",
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        loadTable(currentTable, currentPage, pageSize); // Refresh the table
+                    } else {
+                        alert("Hata: " + response.message);
+                    }
+                },
+                error: function (error) {
+                    alert("Bir hata oluştu. Bilgi için konsola bakınız.");
+                }
+            });
+        }
+    });
+
+</script>

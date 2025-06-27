@@ -1,0 +1,277 @@
+﻿@using YemekProjeTest2.ViewModels
+
+<div class="container mt-5">
+    <h2>@Model.User.Username, profilinize hoşgeldiniz.</h2>
+    <p><strong>E-posta:</strong> @Model.User.Email</p>
+    <p><strong>Adres:</strong> @Model.User.Address</p>
+    <p><strong>Telefon No:</strong> @Model.User.PhoneNumber</p>
+    <h4 class="mt-4">Aktif Siparişler</h4>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Restoran</th>
+                    <th>Tarih</th>
+                    <th>Toplam Tutar</th>
+                    <th>Teslimat Adresi</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var orderWithRestaurant in Model.ActiveOrders)
+                {
+                    <tr>
+                        <td>@orderWithRestaurant.RestaurantName</td>
+                        <td>@orderWithRestaurant.Order.OrderDate</td>
+                        <td>@orderWithRestaurant.Order.TotalPrice TL</td>
+                        <td>@orderWithRestaurant.Order.DeliveryAddress</td>
+                        <td>
+                            <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal" data-orderid="@orderWithRestaurant.Order.OrderId">Detaylar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <h4 class="mt-4">Geçmiş Siparişler</h4>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Restoran</th>
+                    <th>Tarih</th>
+                    <th>Toplam Tutar</th>
+                    <th>Teslimat Adresi</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var orderWithRestaurant in Model.PastOrders)
+                {
+                    <tr>
+                        <td>@orderWithRestaurant.RestaurantName</td>
+                        <td>@orderWithRestaurant.Order.OrderDate</td>
+                        <td>@orderWithRestaurant.Order.TotalPrice TL</td>
+                        <td>@orderWithRestaurant.Order.DeliveryAddress</td>
+                        <td>
+                            <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal" data-orderid="@orderWithRestaurant.Order.OrderId">Detaylar</button>
+                        </td>
+                        <td>
+                            <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#reviewDetailsModal" data-orderid="@orderWithRestaurant.Order.OrderId">Değerlendirmem</button>
+                        </td>
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <h4 class="mt-4">Değerlendirilmemiş Siparişler</h4>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Restoran</th>
+                    <th>Tarih</th>
+                    <th>Toplam Tutar</th>
+                    <th>Teslimat Adresi</th>
+                    <th></th>
+                    <th></th> <!-- Değerlendirme için sütun -->
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var orderWithRestaurant in Model.UnreviewedOrders)
+                {
+                    <tr>
+                        <td>@orderWithRestaurant.RestaurantName</td>
+                        <td>@orderWithRestaurant.Order.OrderDate</td>
+                        <td>@orderWithRestaurant.Order.TotalPrice TL</td>
+                        <td>@orderWithRestaurant.Order.DeliveryAddress</td>
+                        <td>
+                            <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal" data-orderid="@orderWithRestaurant.Order.OrderId">Detaylar</button>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal" data-orderid="@orderWithRestaurant.Order.OrderId" data-restaurantname="@orderWithRestaurant.RestaurantName">Puanla & Yorum Yap</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviewModalLabel">Puanla & Yorum Yap</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="reviewOrderId" />
+                    <input type="hidden" id="reviewRestaurantId" />
+                    <div class="mb-3">
+                        <label for="rating" class="form-label">Puan:</label>
+                        <select class="form-control" id="rating" name="rating">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Yorum:</label>
+                        <textarea class="form-control" id="comment" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                    <button type="button" class="btn btn-primary" onclick="submitReview()">Gönder</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Order Details Modal -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="orderDetailsModalLabel">Sipariş Detayları</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Menü İçeriği</th>
+                                <th>Fiyat</th>
+                                <th>Miktar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderDetailsTable">
+                            <!-- Order details will be appended here -->
+                        </tbody>
+                    </table>
+                    <h5 class="mt-3">Toplam Tutar: <span id="totalPrice"></span></h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Review Details Modal -->
+    <div class="modal fade" id="reviewDetailsModal" tabindex="-1" aria-labelledby="reviewDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviewDetailsModalLabel">Değerlendirme Detayları</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="reviewContent"></p>
+                    <h5>Puan: <span id="reviewRating"></span></h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Modal açıldığında sipariş ID ve restoran ID ayarla
+    $('#reviewModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var orderId = button.data('orderid');
+        var restaurantId = button.data('restaurantid');
+        var modal = $(this);
+        modal.find('#reviewOrderId').val(orderId);
+        modal.find('#reviewRestaurantId').val(restaurantId);
+    });
+    // Yorumu ve puanı gönder
+    function submitReview() {
+        var orderId = $('#reviewOrderId').val();
+        var restaurantName = $('#reviewRestaurantName').val();
+        var rating = $('#rating').val();
+        var comment = $('#comment').val();
+
+        $.ajax({
+            url: '@Url.Action("SubmitReview", "Account")',
+            type: 'POST',
+            data: {
+                orderId: orderId,
+                rating: rating,
+                comment: comment
+            },
+            success: function (result) {
+                // Başarılı olması durumunda, modalı kapat ve sayfayı yenile
+                $('#reviewModal').modal('hide');
+                location.reload();
+            },
+            error: function (error) {
+                // Hata durumunda, kullanıcıya bir hata mesajı göster
+                alert("Yorum gönderilemedi. Lütfen tekrar deneyin.");
+            }
+        });
+    }
+
+    // JavaScript code to load the order details into the modal
+    var orderDetailsModal = document.getElementById('orderDetailsModal');
+    orderDetailsModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var orderId = button.getAttribute('data-orderid');
+        var orderDetailsTable = document.getElementById('orderDetailsTable');
+        var totalPriceElement = document.getElementById('totalPrice');
+
+        // Clear previous order details
+        orderDetailsTable.innerHTML = '';
+        totalPriceElement.textContent = '';
+
+        // Fetch the order details from the server
+        fetch(`/Account/GetOrderDetails?orderId=${orderId}`)
+            .then(response => response.json())
+            .then(data => {
+                var totalPrice = 0;
+                data.details.forEach(detail => {
+                    var row = document.createElement('tr');
+                    row.innerHTML = `<td>${detail.menuItem}</td><td>${detail.price}</td><td>${detail.quantity}</td>`;
+                    orderDetailsTable.appendChild(row);
+                    totalPrice += detail.price * detail.quantity;
+                });
+                totalPriceElement.textContent = totalPrice.toFixed(2);
+            })
+            .catch(error => {
+                console.error('An error occurred:', error);
+                orderDetailsTable.innerHTML = '<tr><td colspan="3">Sipariş detayları yüklenirken bir hata oluştu.</td></tr>';
+            });
+    });
+    // JavaScript code to load the review details into the modal
+    var reviewDetailsModal = document.getElementById('reviewDetailsModal');
+    reviewDetailsModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var orderId = button.getAttribute('data-orderid');
+        var reviewContentElement = document.getElementById('reviewContent');
+        var reviewRatingElement = document.getElementById('reviewRating');
+
+        // Clear previous review details
+        reviewContentElement.textContent = '';
+        reviewRatingElement.textContent = '';
+
+        // Fetch the review details from the server
+        fetch(`/Account/GetReviewDetails?orderId=${orderId}`)
+            .then(response => response.json())
+            .then(data => {
+                reviewContentElement.textContent = data.review;
+                reviewRatingElement.textContent = data.rating;
+            })
+            .catch(error => {
+                console.error('An error occurred:', error);
+                reviewContentElement.textContent = 'Değerlendirme detayları yüklenirken bir hata oluştu.';
+            });
+    });
+
+</script>

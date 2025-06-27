@@ -1,0 +1,39 @@
+﻿@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Kayıt Ol";
+}
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">
+        @ViewBag.ErrorMessage
+    </div>
+}
+<h2>Üye Kaydı</h2>
+
+<form asp-controller="Account" asp-action="RegisterCustomer" method="post" class="form-group">
+    <div class="mb-3">
+        <label for="Username" class="form-label">Kullanıcı Adı</label>
+        <input type="text" class="form-control" id="Username" name="username" required>
+    </div>
+    <div class="mb-3">
+        <label for="Password" class="form-label">Şifre</label>
+        <input type="password" class="form-control" id="Password" name="password" required>
+    </div>
+    <div class="mb-3">
+        <label for="confirmPassword">Şifre Doğrulama:</label>
+        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required />
+    </div>
+    <div class="mb-3">
+        <label for="Email" class="form-label">E-posta</label>
+        <input type="email" class="form-control" id="Email" name="email" required>
+    </div>
+    <div class="mb-3">
+        <label for="Address" class="form-label">Adres</label>
+        <input type="text" class="form-control" id="Address" name="address">
+    </div>
+    <div class="mb-3">
+        <label for="PhoneNumber" class="form-label">Telefon Numarası</label>
+        <input type="text" class="form-control" id="PhoneNumber" name="phoneNumber">
+    </div>
+    <button type="submit" class="btn btn-primary">Kayıt Ol</button>
+</form>

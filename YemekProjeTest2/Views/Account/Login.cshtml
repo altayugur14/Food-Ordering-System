@@ -1,0 +1,28 @@
+﻿@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Giriş Yap";
+}
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">
+        @ViewBag.ErrorMessage
+    </div>
+}
+
+<h2 class="text-center">Giriş Yap</h2>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <form method="post" action="@Url.Action("Login", "Account")" class="form-group">
+            <div class="mb-3">
+                <label for="username" class="form-label">Kullanıcı Adı:</label>
+                <input type="text" class="form-control" id="username" name="username" required />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Şifre:</label>
+                <input type="password" class="form-control" id="password" name="password" required />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Giriş Yap</button>
+            <input type="checkbox" name="rememberMe" /> Beni Hatırla
+        </form>
+    </div>
+</div>

@@ -1,0 +1,45 @@
+﻿@model List<YemekProjeTest2.Models.Order>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Tamamlanmış Siparişler</h2>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sipariş ID</th>
+                                <th>Tarih</th>
+                                <th>Toplam Fiyat</th>
+                                <th>Adres</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Count > 0)
+                            {
+                                foreach (var order in Model)
+                                {
+                                    <tr>
+                                        <td>@order.OrderId</td>
+                                        <td>@order.OrderDate</td>
+                                        <td>@order.TotalPrice TL</td>
+                                        <td>@order.DeliveryAddress</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center">Hiç tamamlanmış sipariş bulunamadı.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

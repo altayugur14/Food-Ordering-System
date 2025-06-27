@@ -1,0 +1,31 @@
+﻿@model YemekProjeTest2.Models.Order
+
+<div class="container mt-5">
+    <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading">Sipariş Onaylandı!</h4>
+        <p>Siparişiniz başarıyla alındı. Aşağıda sipariş detaylarınızı görebilirsiniz.</p>
+    </div>
+
+    <h5>Sipariş Detayları:</h5>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Menü Öğesi</th>
+                <th>Miktar</th>
+                <th>Fiyat</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.OrderDetails)
+            {
+                <tr>
+                    <td>@item.MenuItem.Name</td>
+                    <td>@item.Quantity</td>
+                    <td>@(item.Quantity * item.MenuItem.Price)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p><strong>Toplam Tutar:</strong> @Model.TotalPrice TL</p>
+    <p><strong>Teslimat Adresi:</strong> @Model.DeliveryAddress</p>
+</div>

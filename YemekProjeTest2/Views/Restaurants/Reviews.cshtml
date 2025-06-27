@@ -1,0 +1,12 @@
+﻿<div class="container mt-4">
+    <h2>@Model.RestaurantName Yorumları</h2>
+    @foreach (var review in Model.Reviews)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Puan: @review.Rating / 5</h5>
+                <p class="card-text">@review.Comment</p>
+            </div>
+        </div>
+    }
+</div>

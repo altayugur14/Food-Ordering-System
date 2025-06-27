@@ -1,0 +1,141 @@
+﻿@model YemekProjeTest2.ViewModels.DashboardViewModel
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2>@Model.Restaurant.Name</h2>
+                </div>
+                <div class="card-body">
+                    <h5>Adres: @Model.Restaurant.Address</h5>
+                    <h5>Telefon: @Model.Restaurant.PhoneNumber</h5>
+                    <h5>Puan: @(Model.Restaurant.Rating?.ToString("0.00") ?? "Henüz değerlendirilmemiş") / 5.0</h5>
+                    <a href="@Url.Action("MenuItems", "Restaurants")" class="btn btn-primary">Menü içeriklerini düzenle</a>
+                </div>
+            </div>
+            <a href="@Url.Action("CompletedOrders", "Restaurants")" class="btn btn-info">Tamamlanmış Siparişler</a>
+
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Aktif Siparişler</h2>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sipariş Sahibi</th>
+                                <th>Tarih</th>
+                                <th>Toplam Fiyat</th>
+                                <th>Adres</th>
+                                <th></th> 
+                                <th></th><!-- Tamamlandı düğmesi için sütun -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Orders != null)
+                            {
+                                @foreach (var order in Model.Orders)
+                                {
+                                    <tr>
+                                        <td>@Model.UserNames[order.OrderId]</td>
+                                        <td>@order.OrderDate</td>
+                                        <td>@order.TotalPrice TL</td>
+                                        <td>@order.DeliveryAddress</td>
+                                        <td>
+                                            <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#orderDetailsModal" data-orderid="@order.OrderId">Detaylar</button>
+                                        </td>
+
+                                        <td>
+                                            <button class="btn btn-success complete-order" data-orderid="@order.OrderId" onclick="completeOrder(@order.OrderId)">Siparişi Tamamla</button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <p>Hiç sipariş bulunamadı.</p>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderDetailsModalLabel">Sipariş Detayları</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Menü Öğesi</th>
+                            <th>Fiyat</th>
+                            <th>Miktar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderDetailsContent">
+                        <!-- Order details will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function completeOrder(orderId) {
+        // AJAX çağrısıyla "CompleteOrder" metotunu tetikle
+        $.ajax({
+            url: '@Url.Action("CompleteOrder", "Restaurants")',
+            type: 'POST',
+            data: { orderId: orderId },
+            success: function (result) {
+                // İsteğin başarılı olması durumunda, sayfayı yenile
+                location.reload();
+            },
+            error: function (error) {
+                // Hata durumunda, kullanıcıya bir hata mesajı göster
+                alert("Sipariş tamamlanamadı. Lütfen tekrar deneyin.");
+            }
+        });
+    }
+
+    // JavaScript code to load the order details into the modal
+    var orderDetailsModal = document.getElementById('orderDetailsModal');
+    orderDetailsModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var orderId = button.getAttribute('data-orderid');
+        var orderDetailsContentElement = document.getElementById('orderDetailsContent');
+
+        // Clear previous order details
+        orderDetailsContentElement.innerHTML = '';
+
+        // Fetch the order details from the server
+        fetch(`/Restaurants/GetOrderDetails?orderId=${orderId}`)
+            .then(response => response.json())
+            .then(data => {
+                data.details.forEach(detail => {
+                    var row = '<tr><td>' + detail.menuItem + '</td><td>' + detail.price + ' TL</td><td>' + detail.quantity + '</td></tr>';
+                    orderDetailsContentElement.innerHTML += row;
+                });
+            })
+            .catch(error => {
+                console.error('An error occurred:', error);
+                orderDetailsContentElement.innerHTML = '<tr><td colspan="3">Sipariş detayları yüklenirken bir hata oluştu.</td></tr>';
+            });
+    });
+
+</script>
